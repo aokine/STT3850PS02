@@ -1,0 +1,488 @@
+
+---
+title: "Problem Set 02: Data Visualization"
+author: "Your Name Goes Here"
+date: 'Last compiled: `r format(Sys.time(), "%B %d, %Y at %X")`'
+output:
+  bookdown::html_document2:
+    theme: lumen
+    toc: yes
+    toc_float: yes
+    df_print: kable
+    css: MyLab.css 
+---
+
+```{r include = FALSE}
+library(knitr)
+knitr::opts_chunk$set(echo = TRUE, fig.align = "center", comment = NA, message = FALSE,  warning = FALSE)
+```
+
+```{r, include = FALSE, message = FALSE}
+library(ggplot2)
+library(dplyr)
+library(nycflights13)
+```
+
+
+This problem set will use the `ggplot2` package to generate graphics. "The Grammar of Graphics," is the theoretical basis for the `ggplot2` package. Much like how we construct sentences in any language by using a linguistic grammar (nouns, verbs, etc.), the grammar of graphics allows us to specify the components of a statistical graphic.
+
+In short, the grammar tells us that:
+
+> A statistical graphic is a `mapping` of `data` variables to `aes`thetic attributes of `geom`etric objects.
+
+A graphic can be broken into three **essential** components:
+
+- `data`: the data-set comprised of variables that we plot
+- `geom`: the type of `geom`etric objects visible in a plot (points, lines, bars, etc.)
+- `aes`: aesthetic attributes of the geometric object that one perceives on a graphic. For example, x/y position, color, shape, and size. Each assigned aesthetic attribute can be mapped to a variable in our data-set.
+
+
+# Getting Set up
+
+<div id="instructions">
+Type complete sentences to answer all questions inside the `answer` tags provided in the R Markdown document.  Round all numeric answers you report inside the answer tags to four decimal places.  Use inline `R` code to report numeric answers inside the `answer` tags (i.e. do not hard code your numeric answers).
+</div>
+
+Once you have opened the document:
+
+
+*  Change the author field to your First and Last name (example, `author: "John Smith"`).
+
+
+## R Packages
+
+R Packages are like apps on a cell phone - they are tools for accomplishing common tasks. R is an open-source programming language, meaning that people can contribute packages that make our lives easier, and we can use them for free.  For this problem set, the following R packages will be used:
+
+- `dplyr`: for data wrangling
+- `ggplot2`: for data visualization
+- `readr`: for reading in data
+
+These above packages are already installed on Appalachian's R Studio Server. **Every time** you open a new R session you need to **load (open)** any packages you want to use. Loading a package is done with the `library()` function.
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(readr)
+```
+
+Remember, "running code means" telling R "do this". You tell R to do something by passing code through the console. You can run existing code many ways:
+
+- re-typing code out directly in the console (most laborious method)
+- copying and pasting existing code into the console and hitting enter (easier method)
+- click on the green triangle in the code chunk (easiest method 1)
+- highlight the code and select `Control-Enter` on a PC or `Command-Return` on a Mac (easiest method 2)
+
+
+## The Data
+
+Today, we will practice data visualization using data on births from the state of North Carolina. The code below reads a `*.CSV` file from a URL into the object `nc`.  
+
+```{r}
+site <- "https://aokine.github.io/Data/nc.csv"
+nc <- read.csv(file = url(site))
+```
+
+The data set that displays in your Environment is a large **data frame**. Each observation or **case** is a birth of a single child. 
+
+The  workspace area in the upper right hand corner of the R Studio window should now list a  data set called `nc` with 800 observations (rows or cases) and 13 variables (columns). 
+
+# How to Look at Data in R
+
+## Take a Glimpse
+
+You can see the **dimensions of this data frame (# of rows and columns)**, the names of the variables, the variable types and the first few observations using the `glimpse` function. 
+
+```{r}
+glimpse(nc)
+```
+
+We can see that there are `r dim(nc)[1]` observations and `r dim(nc)[2]` variables in this data set. It is good practice to see if R is treating variables as factors `<fct>`; as numbers `<int>` or `<dbl>` (basically numbers with decimals); or as characters (i.e. text) `<chr>`.  The variable names are `fage`, `mage`, `mature`, etc. The output from `glimpse(nc)` tells us that six of the variables are numbers with decimals (`<dbl>`).  The other seven variables are character (`<chr>`). 
+
+__________
+
+1. What type of variable is R considering the variable `habit` to be? What variable type is `visits`? (answer with text)
+
+<div id="answer">
+Type your complete sentence answer here using inline R code and delete this comment.
+
+```{r}
+
+```
+
+
+</div> 
+
+## The Data Viewer
+
+By clicking on the name `nc` in the *Environment* pane (upper right window), the data is displayed in the Source pane (upper left window) in the *Data Viewer*. R has stored these data in a kind of spreadsheet called a *data frame*. Each row represents a different birth: the first entry or column in each row is simply the row number, the rest are the different variables that were recorded for each birth. You can close the data viewer by clicking on the `x` in the appropriate tab.
+
+
+<div id="instructions">
+It is a good idea to try kitting your document from time to time as you go along. Go ahead, and make sure your document is knitting, and that your html file includes Exercise headers, text, and code. Note that knitting automatically saves your Rmd file too.
+</div>
+
+# Types of Graphs
+Three types of graphs are explored in this problem set: 
+
+  - scatterplots
+  - boxplots
+  - histograms
+
+##  Scatterplots
+Scatterplots allow you to investigate the relationship between two **numerical** variables. While you may already be familiar with this type of plot, let's view it through the lens of the Grammar of Graphics. Specifically, we will graphically investigate the relationship between the following two numerical variables in the `nc` data frame:
+
+- `weeks`: length of a pregnancy on the horizontal "x" axis and
+- `weight`: birth weight of a baby in pounds on the vertical "y" axis
+
+
+```{r, fig.height = 3, fig.width = 4}
+ggplot(data = nc, aes(x = weeks, y = weight)) + 
+  geom_point()
+```
+
+
+Let's view this plot through the grammar of graphics. Within the `ggplot()` function call, we specified:
+
+- The data frame to be `nc` by setting `data = nc`
+- The `aes`thetic `mapping` by setting `aes(x = weeks, y = weight)`
+- The variable `weeks` maps to the `x`-position `aes`thetic
+- The variable `weight` maps to the `y`-position `aes`thetic.
+
+We also add a layer to the `ggplot()` function call using the `+` sign. The layer in question specifies the `geom`etric object as `point`s  using `geom_point()`.
+
+Finally, we can also add axis labels and a title to the plot as shown below. Again we add a new layer, this time a `labs` or labels layer. 
+
+```{r}
+ggplot(data = nc, aes(x = weeks, y = weight)) + 
+  geom_point() + 
+  labs(x = "Length of pregnancy (in weeks)", 
+       y = "Birth weight of baby (lbs)", 
+       title = "Relationship between pregnancy duration and newborn weight")
+```
+
+2. Is there a positive or negative relationship between `weight` and `weeks`? (text only to answer)
+
+<div id="answer">
+Type your complete sentence answer here using inline R code and delete this comment.
+
++ 
+
+</div> 
+
+
+3.  Make a graph showing `weeks` again on the x axis and the variable `gained` on the y axis (the amount of weight a mother gained during pregnancy).  Include axis labels with measurement units, and a title. (code only to answer)
+
+```{r}
+# Type your code and comments inside the code chunk
+
+
+
+```
+
+
+4.  Study the code below, and the resulting graphical output. Note that I added a new argument of `color = premie` **inside** the `aes`thetic mapping. The variable `premie` indicates whether a birth was early (premie) or went full term. Please answer with text:
+
+     **A.** What did adding the argument `color = premie` accomplish? 
+     
+     **B.** How many **variables** are now displayed on this plot?  
+     
+     **C.** What appears to (roughly) be the pregnancy length cutoff for classifying a newborn as a "premie" versus a "full term". 
+
+```{r fig.height=3, fig.width=5, warning=F}
+ggplot(data = nc, aes(x = weeks, y = gained, color = premie))+ 
+  geom_point() + 
+  labs(x = "Pregnancy length (wks)", y = "Maternal weight gain (lbs)")
+```
+
+<div id="answer">
+Type your complete sentence answer here using inline R code and delete this comment.
+
+**A.** 
+
+     
+**B.** 
+
+     
+**C.** 
+
+
+```{r}
+
+```
+
+
+
+</div> 
+
+5. Make a new scatterplot that shows a mothers age on the x axis (variable called `mage`) and birth weight of newborns on the y axis (`weight`). Color the points on the plot based on the gender of the resulting baby (variable called `gender`). Does there appear to be any strong relationship between a mother's age and the weight of her newborn? (code and text to answer)
+
+```{r}
+# Type your code and comments inside the code chunk
+
+
+```
+
+<div id="answer">
+Type your complete sentence answer here using inline R code and delete this comment.
+
++   
+
+</div> 
+
+<div id="instructions">
+Make sure your document is knitting, and that your html file includes Exercise headers, text, and code. Note that knitting automatically saves your Rmd file too.
+</div>
+
+## Histograms 
+
+Histograms are useful plots for showing how many elements of a **single numerical** variable fall in specified bins. This is a very useful way to get a sense of the **distribution** of your data. Histograms are often one of the first steps in exploring data visually. 
+
+
+For instance, to look at the distribution of pregnancy duration (variable called `weeks`), consider the following code:
+
+```{r fig.height=3, fig.width=5}
+ggplot(data = nc, aes(x = weeks))+ 
+  geom_histogram()
+```
+
+
+A few things to note here:
+
+- There is only one variable being mapped in `aes()`: the single numerical variable `weeks`. You don't need to compute the `y`-`aes`thetic: R calculates it automatically.
+- We set the geometric object as `geom_histogram()`
+- The warning message encourages us to specify the number of bins on the histogram, as R chose 30 for us. 
+
+We can change the binwidth (and thus the number of bins), and the colors as shown next. 
+
+```{r fig.height = 3, fig.width = 5, warning = FALSE}
+ggplot(data = nc, aes(x = weeks))+ 
+  geom_histogram(binwidth = 1, color = "black", fill = "steelblue") + 
+  theme_bw()
+```
+
+Note that none of these arguments went inside the `aes`thetic `mapping` argument as they do not specifically represent mappings of variables. 
+
+6. Inspect the histogram of the `weeks` variable. Answer each of the following with **text**. 
+
+    **A.** The y axis is labeled **count**. What is specifically being counted in this case? Hint: think about what each case is in this data set. 
+    
+    **B.** What appears to be roughly the average length of pregnancies in weeks?
+    
+    **C.** If we changed the binwidth to 100, how many bins would there be? Roughly how many cases would be in each bin?
+    
+<div id="answer">
+Type your complete sentence answer here using inline R code and delete this comment.
+
+**A.** 
+
+
+**B.** 
+
+
+```{r}
+
+```
+
+**C.** 
+
+
+```{r}
+
+```
+
+</div> 
+
+7.  Make a histogram of the birth `weight` of newborns (which is in lbs), include a descriptive title and axis labels.  Make the bins lightblue with a blue border and a binwidth  of 1. (code only to answer)
+
+```{r}
+# Type your code and comments inside the code chunk
+
+
+
+
+
+
+  
+```
+
+___________
+
+### Faceting{-} 
+Faceting is used to create small multiples of the same plot over a different categorical variable. By default, all of the small multiples will have the same vertical axis.
+
+For example, suppose we are interested in looking at whether pregnancy length varies by the maturity status of a mother (column name `mature`). This is what is meant by "the distribution of one variable over another variable": `weeks` is one variable and `mature` is the other variable. In order to look at histograms of `weeks` for older and more mature mothers, add a plot layer using `facet_wrap(~ mature, ncol = 1)`. The `ncol = 1` argument tells R to stack the two histograms into one column. 
+
+```{r fig.height = 3, fig.width = 4}
+ggplot(data = nc, aes(x = weeks)) +
+  geom_histogram(binwidth = 1, color = "blue", fill = "lightblue") +
+  facet_wrap(~ mature, ncol = 1) + 
+  theme_bw()
+# Or
+ggplot(data = nc, aes(x = weeks)) +
+  geom_histogram(binwidth = 1, color = "blue", fill = "lightblue") +
+  facet_wrap(facets = vars(mature), ncol = 1) + 
+  theme_bw()
+```
+
+__________
+
+8.  Make a histogram of newborn birth `weight` split by `gender` of the child. Set the binwidth to 0.5. Which gender appears to have a slightly larger average birth weight? **Extra Credit:** Have the bins of the female histogram a different color than the bins of the male histogram.  Outline the bins of both histograms in black. (code and text to answer)
+
+```{r}
+# Type your code and comments inside the code chunk
+
+```
+
+<div id="answer">
+Type your complete sentence answer here using inline R code and delete this comment.
+
++
+
+</div> 
+
+<div id="instructions">
+Make sure your document is knitting, and that your html file includes Exercise headers, text, and code. Note that knitting automatically saves your Rmd file too.
+</div>
+
+
+## Boxplots
+
+While histograms can help to show the distribution of data, boxplots have much more flexibility and can provide even more information in a single graph. The y `aes`thetic is the numeric variable you want to include in the boxplot, and the x `aes`thetic is a grouping variable. For instance, below `gender` is the `aes`thetic `mapping` for x, and `gained` is the `aes`thetic `mapping` for y. This creates a boxplot of the weight gained for mothers that had male and female newborns.  Note that the `fill` argument is not necessary, but sets a color for the boxplots. 
+
+```{r fig.height = 3, fig.width = 4}
+ggplot(data = nc, aes(x = gender, y = gained)) +
+  geom_boxplot(fill = "wheat") + 
+  theme_bw()
+```
+
+
+<div id="instructions">
+For review, these are the different parts of the boxplot: '
+
+- The bottom of the "box" portion represents the 25th percentile (1st quartile)
+- The horizontal line in the "box" shows the median (50th percentile, 2nd quartile)
+- The top of the "box" represents the 75th percentile (3rd quartile)
+- The height of each "box", i.e. the value of the 3rd quartile minus the value of the 1st quartile, is called the interquartile range (IQR). It is a measure of spread of the middle 50% of values. Longer boxes indicating more variability.
+- The "whiskers" extending out from the bottoms and tops of the boxes represent points less than the 25th percentile and greater than the 75th percentiles respectively. They extend out **no more than** 1.5 x IQR units away from either end of the boxes. The length of these whiskers show how the data outside the middle 50% of values vary. Longer whiskers indicate more variability.
+- The dots represent values falling outside the whiskers or outliers. The definition of an outlier is somewhat arbitrary and not absolute. In this case, they are defined by the length of the whiskers, which are no more than 1.5 x IQR units long.
+</div>
+
+
+9. Make a boxplot of the weight `gained` by moms, split by the maturity status of the mothers (`mature`).  Include axis labels and a title on your plot. Is the **median** weight gain during pregnancy larger for younger or older moms? (text and code)
+
+```{r}
+# Type your code and comments inside the code chunk
+
+
+
+
+
+```
+
+<div id="answer">
+Type your complete sentence answer here using inline R code and delete this comment.
+
++     
+
+</div> 
+
+10. Make a boxplot of pregnancy duration in `weeks` by smoking `habit`. Is the duration of pregnancy more **variable** for smokers or non-smokers? (i.e. which group has the greater spread for the variable `weeks`?  Make sure to specify how you are measuring spread in your answer). 
+
+```{r}
+# Type your code and comments inside the code chunk
+
+
+
+```
+
+<div id="answer">
+Type your complete sentence answer here using inline R code and delete this comment.
+
+
++   
+
+</div> 
+
+<div id="instructions">
+Make sure your document is knitting, and that your html file includes Exercise headers, text, and code. Note that knitting automatically saves your Rmd file too!
+</div>
+
+
+
+------
+
+
+# More Practice 
+For the following, determine which type of plot to use, **make the plot** and answer any questions with **text**. There is a table at the end of this document that can help you determine which plot to use given the question/types of variables. 
+
+
+11. Using a data visualization, visually assess: Is the variable for father's age (`fage`) symmetrical, or does it have a skew?
+
+```{r}
+# Type your code and comments inside the code chunk
+
+
+
+
+```
+
+<div id="answer">
+Type your complete sentence answer here using inline R code and delete this comment.
+
++   
+
+</div> 
+
+12. Using a data visualization, visually assess: (in this sample) is the median birth `weight` of babies greater for white or non-white mothers (variable called `whitemom`)?
+
+```{r}
+# Type your code and comments inside the code chunk
+
+
+
+```
+
+<div id="answer">
+Type your complete sentence answer here using inline R code and delete this comment.
+
++ 
+
+</div> 
+
+13. Using a data visualization, visually assess: (in this sample) as a mother's age (`mage`) increases, does the duration of pregnancy (`weeks`) appear to decrease? 
+
+```{r}
+# Type your code and comments inside the code chunk
+
+
+
+
+```
+
+<div id="answer">
+Type your complete sentence answer here using inline R code and delete this comment.
+
++   
+
+</div> 
+
+------
+
+# Data Visualization Table
+This table is a great resource for thinking about how to visualize data. 
+
+![](figures/graph.table.png)
+
+Table 3.5 from Modern Dive 
+http://moderndive.netlify.com/index.html
+
+____________
+
+# Logging out of the Server
+
+- Save all your work. 
+- Click on the orange button in the far right corner of the screen to quit R 
+- Click on the icon of your name in the top right to log out
+- You are signed out! 
+
+____________
